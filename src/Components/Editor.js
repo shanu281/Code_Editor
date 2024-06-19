@@ -1,40 +1,45 @@
-import React, { useState } from 'react';
-import { Button, Container, Row, Col, Form } from 'react-bootstrap';
+import React, { useState, useRef } from 'react';
+import '../App.css';
+import { Container, Row, Col, Form } from 'react-bootstrap';
 import AceEditor from 'react-ace';
+import { Button, Text, useToast } from "@chakra-ui/react";
+import { executeCode } from '../api';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-// Import all necessary modes and themes
-import "ace-builds/src-min-noconflict/ext-language_tools";
-import 'ace-builds/src-noconflict/mode-javascript';
-import 'ace-builds/src-noconflict/mode-java';
-import 'ace-builds/src-noconflict/mode-python';
-import 'ace-builds/src-noconflict/mode-xml';
-import 'ace-builds/src-noconflict/mode-ruby';
-import 'ace-builds/src-noconflict/mode-sass';
-import 'ace-builds/src-noconflict/mode-markdown';
-import 'ace-builds/src-noconflict/mode-mysql';
-import 'ace-builds/src-noconflict/mode-json';
-import 'ace-builds/src-noconflict/mode-html';
-import 'ace-builds/src-noconflict/mode-handlebars';
-import 'ace-builds/src-noconflict/mode-golang';
-import 'ace-builds/src-noconflict/mode-csharp';
-import 'ace-builds/src-noconflict/mode-coffee';
-import 'ace-builds/src-noconflict/mode-css';
-
 import 'ace-builds/src-noconflict/theme-github';
 import 'ace-builds/src-noconflict/theme-monokai';
 import 'ace-builds/src-noconflict/theme-solarized_dark';
 import 'ace-builds/src-noconflict/theme-twilight';
 
 const CodeEditor = () => {
+    const editorRef = useRef(null);
     const [code, setCode] = useState('');
-    const [output, setOutput] = useState('');
-    const [mode, setMode] = useState('html');
+    const [mode, setMode] = useState('javascript');
     const [theme, setTheme] = useState('github');
+    const toast = useToast();
+    const [output, setOutput] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isError, setIsError] = useState(false);
 
-    const handleRun = () => {
-        console.log('Running code:', code);
-        setOutput(code);
+    const runCode = async () => {
+        if (!editorRef.current) return;
+        const sourceCode = editorRef.current.editor.getValue();
+        if (!sourceCode) return;
+        try {
+            setIsLoading(true);
+            const { run: result } = await executeCode(mode, sourceCode);
+            setOutput(result.output.split("\n"));
+            result.stderr ? setIsError(true) : setIsError(false);
+        } catch (error) {
+            console.log(error);
+            toast({
+                title: "An error occurred.",
+                description: error.message || "Unable to run code",
+                status: "error",
+                duration: 6000,
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleSubmit = () => {
@@ -54,7 +59,7 @@ const CodeEditor = () => {
         setTheme(e.target.value);
     };
 
-    const modes = ["javascript", "java", "python", "xml", "ruby", "sass", "markdown", "mysql", "json", "html", "handlebars", "golang", "csharp", "coffee", "css"];
+    const modes = ["javascript", "typescript", "python", "java", "csharp", "php"];
     const themes = ["github", "monokai", "solarized_dark", "twilight"];
 
     return (
@@ -62,7 +67,7 @@ const CodeEditor = () => {
             <Row className="mb-3">
                 <Col md={6} sm={12}>
                     <Form.Group controlId="modeSelect">
-                        <Form.Label>Select Mode</Form.Label>
+                        <Form.Label><b>Select Language</b></Form.Label>
                         <Form.Select aria-label="Select Mode" value={mode} onChange={handleModeChange}>
                             {modes.map((mode) => (
                                 <option key={mode} value={mode}>
@@ -74,7 +79,7 @@ const CodeEditor = () => {
                 </Col>
                 <Col md={6} sm={12}>
                     <Form.Group controlId="themeSelect">
-                        <Form.Label>Select Theme</Form.Label>
+                        <Form.Label><b>Select Theme</b></Form.Label>
                         <Form.Select aria-label="Select Theme" value={theme} onChange={handleThemeChange}>
                             {themes.map((theme) => (
                                 <option key={theme} value={theme}>
@@ -84,39 +89,36 @@ const CodeEditor = () => {
                         </Form.Select>
                     </Form.Group>
                 </Col>
-
             </Row>
             <Row className="mt-3">
                 <Col md={6} sm={12} className="problem-sec">
                     <AceEditor
                         mode={mode}
                         theme={theme}
-                        onChange={handleChange}
-                        name="UNIQUE_ID_OF_DIV"
+                        name="code-editor"
                         editorProps={{ $blockScrolling: true }}
-                        value={code}
+                        ref={editorRef}
+                        height="100%"
                         width="100%"
-                        height="500px"
+                        onChange={handleChange}
                         enableBasicAutocompletion={true}
                         enableLiveAutocompletion={true}
                         enableSnippets={true}
                     />
                 </Col>
                 <Col md={6} sm={12} className="problem-sec">
-                    <p>Solution output will be displayed here.</p>
-                    <iframe
-                        title="Output"
-                        srcDoc={output}
-                        style={{ width: '100%', height: '500px', border: '1px solid #ddd' }}
-                    />
+                    <h2>Output</h2>
+                    {output
+                        ? output.map((line, i) => <Text key={i}>{line}</Text>)
+                        : 'Click "Run" to see the output here'}
                 </Col>
             </Row>
             <Row className="mb-3 justify-content-center">
                 <Col className="text-center">
-                    <Button style={{ width: "6rem" }} variant="primary" onClick={handleRun}>
+                    <Button className='run-btn' onClick={runCode} isLoading={isLoading}>
                         Run
                     </Button>
-                    <Button style={{ width: "6rem" }} variant="success" onClick={handleSubmit} className="ml-2">
+                    <Button className='submit-btn' onClick={handleSubmit}>
                         Submit
                     </Button>
                 </Col>
@@ -126,3 +128,4 @@ const CodeEditor = () => {
 };
 
 export default CodeEditor;
+

@@ -2,56 +2,33 @@
   transition: background-color 0.3s, color 0.3s;
 }
 
-.App.light {
-  background-color: white;
-  color: black;
-}
-
-.App.dark {
-  background-color: #333;
-  color: white;
-}
-
-.header {
-  padding: 10px;
-}
-
-.header .btn {
-  margin-top: 10px;
-}
-
 .problem-sec {
-  padding: 20px;
+  /* padding: 20px; */
   text-align: left;
-  border: 1px solid #ddd;
+  border: 1px solid gray;
   height: 60vh; /* Adjust the height as needed */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
-.line-numbers {
-  width: 30px;
-  text-align: right;
-  padding-right: 10px;
-  border-right: 1px solid #ddd;
-  user-select: none;
-  color: #888;
-  margin: 0;
-}
-
-.code-editor {
-  width: 100%;
-  height: 100%;
-  margin-left: 20px;
+.run-btn{
+  width: 6rem;
+  background-color: #0d6efd;
+  color: white;
+  padding: 0.5rem 2rem;
+  font-weight: 800;
+  border-radius: 5px;
   border: none;
-  outline: none;
-  resize: none;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  font-family: monospace;
+  margin: 1rem;
 }
-
-button.ml-2 {
-  margin-left: 10px;
+.submit-btn{
+  width: 6rem;
+  background-color: #198754;
+  color: white;
+  padding: 0.5rem 2rem;
+  font-weight: 800;
+  border-radius: 5px;
+  margin: 1rem;
+  border: none;
 }
